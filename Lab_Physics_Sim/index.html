@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Lab Simulator - Konstanta Pegas</title>
+    <link rel="stylesheet" href="Styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css">
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-container">
+            <h2>🔐 Physics Lab Login</h2>
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchLoginTab('login')">Login</div>
+                <div class="login-tab" onclick="switchLoginTab('register')">Register</div>
+            </div>
+            
+            <div class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Masukkan username" minlength="3" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Masukkan password" minlength="6">
+                </div>
+                <button class="btn" onclick="performLogin()">Masuk</button>
+            </div>
+            
+            <div class="register-form" id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" placeholder="Buat username (3-20 karakter)" minlength="3" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Buat password (min 6 karakter)" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirm">Konfirmasi Password</label>
+                    <input type="password" id="registerConfirm" placeholder="Ulangi password" minlength="6">
+                </div>
+                <button class="btn" onclick="performRegistration()">Daftar</button>
+            </div>
+            
+            <div class="database-actions">
+                <button class="btn btn-secondary" onclick="showDatabaseManager()">📊 Database Manager</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Manager Modal -->
+    <div class="database-manager-modal" id="databaseManagerModal" style="display: none;">
+        <div class="database-manager-container">
+            <h2>📊 Database Management</h2>
+            <div class="database-actions">
+                <button class="btn" onclick="exportAllData()">📥 Export All Data</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importAllFile').click()">
+                    📤 Import Data
+                    <input type="file" id="importAllFile" style="display: none;" accept=".json" onchange="importAllData(event)">
+                </button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+            
+            <div class="user-list">
+                <h3>User Accounts</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Experiments</th>
+                            <th>Join Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userListBody">
+                        <!-- Users will be listed here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn btn-close" onclick="hideDatabaseManager()">✕ Close</button>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="container">
+        <header class="header">
+            <h1>🔬 Physics Lab Simulator</h1>
+            <p>Simulasi Interaktif Konstanta Pegas - Hukum Hooke</p>
+        </header>
+        
+        <div class="user-section">
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div class="user-welcome" id="userWelcome">Selamat datang, User!</div>
+                    <div class="user-stats" id="userStats">Total percobaan: 0 | Sesi terakhir: -</div>
+                </div>
+            </div>
+            <div id="userActions" style="display: none;">
+                <button class="btn btn-secondary" onclick="showHistory()">📊 Riwayat</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import Data</button>
+                <button class="btn" onclick="exportUserData()">📥 Export Data</button>
+                <button class="btn" onclick="logout()">🚪 Keluar</button>
+                <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importUserData(event)">
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('single')">Pegas Tunggal</div>
+            <div class="tab" onclick="switchTab('series')">Susunan Seri</div>
+            <div class="tab" onclick="switchTab('parallel')">Susunan Paralel</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="card simulator-container">
+                <h2 id="simulatorTitle">🌟 Virtual Spring Lab - Pegas Tunggal</h2>
+                <div class="spring-visual" id="springVisual">
+                    <div class="ceiling"></div>
+                    <div class="spring-container" id="springContainer">
+                        <!-- Springs will be dynamically generated here -->
+                    </div>
+                    <div class="mass" id="mass">50g</div>
+                </div>
+                
+                <div class="spring-info" id="springInfo">
+                    <h4>Pegas Tunggal</h4>
+                    <p>Konstanta pegas: k = F/x. Gaya berbanding lurus dengan perpindahan.</p>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group spring-count-control" id="springCountControl">
+                        <label for="springCountInput">Jumlah Pegas:</label>
+                        <input type="number" id="springCountInput" value="3" min="2" max="5" onchange="updateSpringCount()">
+                    </div>
+                    <div class="control-group">
+                        <label for="massInput">Massa Beban (gram):</label>
+                        <input type="number" id="massInput" value="50" min="10" max="500" step="10" onchange="updateForce()">
+                    </div>
+                    <div class="control-group">
+                        <label for="forceInput">Gaya (N):</label>
+                        <input type="number" id="forceInput" value="0.49" step="0.01" readonly>
+                    </div>
+                    <div class="control-group">
+                        <label for="displacementInput">Perpindahan (m):</label>
+                        <input type="number" id="displacementInput" value="0.025" step="0.001" min="0" max="0.2" onchange="updateSpringVisual()">
+                    </div>
+                    <button class="btn" onclick="addDataPoint()">📊 Tambah Data</button>
+                    <button class="btn" onclick="calculateConstant()">🧮 Hitung k</button>
+                    <button class="btn" onclick="resetData()">🔄 Reset</button>
+                    <button class="btn btn-secondary" onclick="saveExperiment()">💾 Simpan</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📈 Grafik F vs x</h2>
+                <div class="chart-container">
+                    <canvas id="forceChart"></canvas>
+                </div>
+                <div class="formula-display" id="formulaDisplay">
+                    F = k × x<br>
+                    <span style="font-size: 0.8rem; opacity: 0.7;">k = F / x</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card results">
+            <h2>📊 Hasil Perhitungan</h2>
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-value" id="springConstant">19.6</div>
+                    <div class="result-label">Konstanta Pegas (N/m)</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="dataPoints">0</div>
+                    <div class="result-label">Jumlah Data</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="rSquared">-</div>
+                    <div class="result-label">R² (Akurasi)</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-value" id="uncertainty">±0.1</div>
+                    <div class="result-label">Ketidakpastian</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card history-section" id="historySection" style="display: none;">
+            <h2>📚 Riwayat Percobaan</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Tipe</th>
+                        <th>Jumlah Pegas</th>
+                        <th>Konstanta (N/m)</th>
+                        <th>Data Points</th>
+                        <th>R²</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- History data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="Script.js"></script>
+</body>
+</html>
